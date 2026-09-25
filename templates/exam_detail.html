@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow"><a href="{{ url_for('exams.exams') }}">Examinations</a></div>
+  <h1>{{ exam.name }}</h1>
+  <p class="lede">{{ exam.term }} {{ exam.year or '' }} &middot; <span class="badge {{ 'badge-green' if exam.status=='open' else 'badge-grey' }}">{{ 'Open for marks entry' if exam.status=='open' else 'Closed' }}</span></p></div>
+  <div class="btn-row">
+    {% if has_perm('exams.manage') %}
+    <a href="{{ url_for('exams.exam_form', eid=exam.id) }}" class="btn">Edit details</a>
+    <a href="{{ url_for('exams.exam_setup', eid=exam.id) }}" class="btn">Classes &amp; subjects</a>
+    <form method="post" action="{{ url_for('exams.exam_status', eid=exam.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn {{ 'btn-gold' if exam.status=='open' else 'btn-primary' }}">{{ 'Close entry' if exam.status=='open' else 'Reopen entry' }}</button>
+    </form>
+    {% endif %}
+    {% if has_perm('exams.manage') or has_perm('results.view_all') %}<a href="{{ url_for('exams.exam_export', eid=exam.id) }}" class="btn">Download all marks</a>{% endif %}
+  </div>
+</div>
+
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>Class</th><th>Subject</th><th>Teacher</th><th class="num-col">Entered</th><th class="num-col">Expected</th><th class="num-col">Verified</th><th style="text-align:right;">Actions</th></tr></thead>
+  <tbody>
+  {% for p in papers %}
+    <tr>
+      <td>{{ p.clabel }}</td><td>{{ p.sname }}</td><td>{% if p.teacher %}{{ p.teacher }}{% if p.teacher_tsc %} <span class="muted" style="font-size:.85rem;">(TSC: {{ p.teacher_tsc }})</span>{% endif %}{% else %}-{% endif %}</td>
+      <td class="num-col">{{ p.entered }}</td><td class="num-col">{{ p.expected }}</td>
+      <td class="num-col">{% if p.verified == p.entered and p.entered %}<span class="badge badge-green">All</span>{% elif p.verified %}{{ p.verified }}{% else %}-{% endif %}</td>
+      <td style="text-align:right;">
+        <div style="display:inline-flex; gap:6px; align-items:center; justify-content:flex-end;">
+          {% if (p.class_id, p.subject_id) in editable %}
+          <a href="{{ url_for('exams.marks_entry', eid=exam.id, cid=p.class_id, sid=p.subject_id) }}" class="btn btn-sm btn-primary">Enter marks</a>
+          {% else %}<span class="small muted">View only</span>{% endif %}
+          {% if has_perm('exams.manage') %}
+          <form method="post" action="{{ url_for('exams.exam_paper_delete', eid=exam.id, cid=p.class_id, sid=p.subject_id) }}" style="display:inline; margin:0;" onsubmit="return confirm('Delete this exam entry ({{ p.clabel }} - {{ p.sname }}) and all its marks?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-danger" title="Delete exam entry">Delete</button>
+          </form>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="tbl-empty">No subjects set up for this exam yet.{% if has_perm('exams.manage') %} <a href="{{ url_for('exams.exam_setup', eid=exam.id) }}">Add classes and subjects</a>.{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if has_perm('exams.manage') %}
+<div class="card section">
+  <h3>Delete this examination</h3>
+  <p class="small">This permanently removes the examination and all its marks. This cannot be undone.</p>
+  <form method="post" action="{{ url_for('exams.exam_delete', eid=exam.id) }}" class="flex gap-8 items-center">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="text" name="confirm" placeholder="Type DELETE to confirm" style="width:220px;">
+    <button class="btn btn-danger">Delete examination</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

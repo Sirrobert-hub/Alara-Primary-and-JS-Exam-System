@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">Records</div><h1>Subjects</h1></div></div>
+<div class="grid cols-2">
+<div class="card">
+  <h3>Add a subject</h3>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="grid cols-2">
+      <div class="field"><label>Code</label><input type="text" name="code" placeholder="e.g. MATH" required></div>
+      <div class="field"><label>Subject name</label><input type="text" name="name" placeholder="e.g. Mathematics" required></div>
+    </div>
+    <button class="btn btn-primary">Add subject</button>
+  </form>
+</div>
+</div>
+<div class="tbl-wrap section">
+<table>
+  <thead><tr><th>Code</th><th>Subject</th><th></th></tr></thead>
+  <tbody>
+  {% for s in subjects %}
+    <tr>
+      <td>{{ s.code }}</td><td>{{ s.name }}</td>
+      <td class="btn-row">
+        <button class="btn btn-sm" onclick="document.getElementById('s{{ s.id }}').classList.toggle('hidden')">Edit</button>
+        {% if s.n_papers == 0 %}
+        <form method="post" action="{{ url_for('academic.subject_delete', sid=s.id) }}" style="display:inline" onsubmit="return confirm('Delete this subject?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    <tr id="s{{ s.id }}" class="hidden"><td colspan="3">
+      <form method="post" class="flex gap-8 items-center">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ s.id }}">
+        <input type="text" name="code" value="{{ s.code }}" style="width:120px;">
+        <input type="text" name="name" value="{{ s.name }}" style="width:220px;">
+        <button class="btn btn-sm btn-primary">Save</button>
+      </form>
+    </td></tr>
+  {% else %}
+    <tr><td colspan="3" class="tbl-empty">No subjects yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

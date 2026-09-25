@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block guest_content %}
+<div class="bare">
+  <div class="auth-card">
+    <div class="mark">Examination Register</div>
+    <div class="tag">Sign in to manage exams, marks and report cards</div>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" autofocus required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button class="btn btn-primary" style="width:100%; justify-content:center;">Sign in</button>
+    </form>
+    <p class="small" style="text-align:center; margin-top:16px;">All data stays on this computer.</p>
+  </div>
+</div>
+{% endblock %}

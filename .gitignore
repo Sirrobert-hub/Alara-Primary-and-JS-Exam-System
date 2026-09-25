@@ -1,0 +1,28 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# System / OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Temporary exports and working files
+data/tmp/*
+!data/tmp/.gitkeep
+
+# System backups (keep directory, ignore archive zips)
+data/backups/*.zip
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Editor settings
+.vscode/
+.idea/

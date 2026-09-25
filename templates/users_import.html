@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="eyebrow"><a href="{{ url_for('auth.users') }}">Users</a></div>
+    <h1>Upload teachers from Excel or CSV</h1>
+    <p class="lede">Import teachers and staff members in bulk to easily register their login accounts and teaching credentials.</p>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h3>1. Download teacher template</h3>
+    <p class="small">The spreadsheet allows you to quickly list your school's teachers. Download the ready-to-use template in Excel or CSV format:</p>
+
+    <div style="background:var(--green-tint); border:1px solid var(--sage-line); border-radius:4px; padding:12px 14px; margin:12px 0; font-size:.82rem;">
+      <b style="color:var(--green-deep); display:block; margin-bottom:6px;">Supported Columns:</b>
+      <code style="display:block; white-space:pre-wrap; word-break:break-all; font-size:.8rem; line-height:1.6; background:#fff; padding:8px 10px; border:1px solid var(--sage-line); border-radius:3px;">Full Name | TSC Number | Username | Phone | Initials | Role | Temporary Password</code>
+    </div>
+
+    <ul class="small muted" style="padding-left:18px; line-height:1.55; margin-bottom:16px;">
+      <li><b>Full Name</b>: Required (e.g. <i>Grace Wanjiku</i> or <i>Mr. Peter Kamau</i>).</li>
+      <li><b>TSC Number</b>: Recommended Teachers Service Commission registration number (e.g. <code>123456</code>).</li>
+      <li><b>Username</b>: Optional. If blank, system auto-generates a clean unique username (e.g. <code>gwanjiku</code>).</li>
+      <li><b>Phone</b>: Optional contact phone number (e.g. <code>0712345678</code>).</li>
+      <li><b>Initials</b>: Optional. If blank, auto-generated from their name (e.g. <code>GW</code>) for report cards.</li>
+      <li><b>Role</b>: Optional. <i>Teacher</i>, <i>Head Teacher</i>, <i>Deputy Head Teacher</i>, <i>Exam Officer</i>, <i>Viewer</i>, or <i>Admin</i> (defaults to Teacher).</li>
+      <li><b>Temporary Password</b>: Optional. If blank, the system uses the default password specified below.</li>
+      <li><b>Security</b>: All uploaded teachers will be required to choose a new password when they first log in.</li>
+    </ul>
+
+    <div class="btn-row">
+      <a href="{{ url_for('auth.users_template') }}" class="btn btn-primary">Download Excel (.xlsx)</a>
+      <a href="{{ url_for('auth.users_template_csv') }}" class="btn">Download CSV (.csv)</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>2. Upload your file</h3>
+    <p class="small">Choose your Excel (.xlsx) or CSV file with teacher details.</p>
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      
+      <div class="field">
+        <label>Teacher details file</label>
+        <input type="file" name="file" accept=".xlsx,.xlsm,.csv,.tsv,.txt" required>
+        <div class="hint">Upload .xlsx, .xlsm, or .csv files.</div>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="field">
+          <label>Default Role (if blank in file)</label>
+          <select name="default_role">
+            {% for k, v in roles.items() %}
+            <option value="{{ k }}" {{ 'selected' if k == 'teacher' }}>{{ v }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Default Temporary Password</label>
+          <input type="text" name="default_password" value="Teacher@2026" minlength="6" required>
+          <div class="hint">Assigned if password column is empty</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="checkline">
+          <input type="checkbox" name="update" checked>
+          <span>Update existing teachers if username, TSC number, or phone matches</span>
+        </label>
+      </div>
+
+      <div class="field">
+        <label class="checkline">
+          <input type="checkbox" name="must_change_pw" checked>
+          <span>Require teachers to change password at their first login</span>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary">Upload &amp; Create Accounts</button>
+        <a href="{{ url_for('auth.users') }}" class="btn">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if report %}
+<div class="card section" style="margin-top:24px;">
+  <div class="card-head">
+    <div>
+      <h3 style="margin-bottom:4px;">Import Results &amp; Login Slips</h3>
+      <p class="small muted" style="margin:0;">Here are the login credentials for the teachers. You can download or print these slips to hand to the teachers.</p>
+    </div>
+    <div class="btn-row">
+      <span class="badge badge-green">{{ report.added }} Added</span>
+      <span class="badge badge-gold">{{ report.updated }} Updated</span>
+      {% if report.skipped %}<span class="badge badge-grey">{{ report.skipped }} Skipped</span>{% endif %}
+      <a href="{{ url_for('auth.users_credentials_download') }}" class="btn btn-sm btn-primary">Download Credentials (Excel)</a>
+    </div>
+  </div>
+
+  {% if report.credentials %}
+  <div class="tbl-wrap" style="margin-top:14px;">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Full Name</th>
+          <th>TSC No.</th>
+          <th>Username</th>
+          <th>Temporary Password</th>
+          <th>Role</th>
+          <th>Phone</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in report.credentials %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><b>{{ c.name }}</b></td>
+          <td>
+            {% if c.tsc_no %}
+            <code style="font-size:.85rem; font-weight:600; color:var(--clr-primary, #0c4a6e);">{{ c.tsc_no }}</code>
+            {% else %}
+            <span class="muted">-</span>
+            {% endif %}
+          </td>
+          <td><code style="font-size:.9rem; font-weight:700;">{{ c.username }}</code></td>
+          <td>
+            <code style="background:var(--gold-tint); color:#7A5A16; font-size:.88rem; padding:2px 6px;">{{ c.password }}</code>
+          </td>
+          <td><span class="badge badge-grey">{{ c.role }}</span></td>
+          <td>{{ c.phone or '-' }}</td>
+          <td>
+            {% if c.status == 'Created' %}
+            <span class="badge badge-green">New Account</span>
+            {% else %}
+            <span class="badge badge-gold">Updated</span>
+            {% endif %}
+          </td>
+          <td>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="copyLogin('{{ c.username }}', '{{ c.password }}')" title="Copy username and password to clipboard">Copy Login</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if report.problems %}
+  <div style="margin-top:16px;">
+    <p class="small"><b>Processing warnings:</b></p>
+    <ul class="small" style="color:var(--ink-soft); max-height:180px; overflow-y:auto; background:var(--green-tint); padding:10px 24px; border-radius:4px;">
+      {% for p in report.problems %}<li>{{ p }}</li>{% endfor %}
+    </ul>
+    {% if report.more %}<p class="small">...and {{ report.more }} more notes.</p>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="btn-row" style="margin-top:18px;">
+    <a href="{{ url_for('auth.users') }}" class="btn btn-primary">Go to Users List</a>
+    <a href="{{ url_for('academic.teaching') }}" class="btn">Assign Subjects &amp; Classes</a>
+  </div>
+</div>
+
+<script>
+function copyLogin(u, p) {
+  const text = 'School Exam System Login\nUsername: ' + u + '\nPassword: ' + p + '\n(You will be asked to set a new password on your first login)';
+  navigator.clipboard.writeText(text).then(function() {
+    alert('Login credentials for ' + u + ' copied to clipboard!');
+  }).catch(function() {
+    prompt('Copy login details:', text);
+  });
+}
+</script>
+{% endif %}
+{% endblock %}

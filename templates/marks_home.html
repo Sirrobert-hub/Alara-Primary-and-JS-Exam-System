@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">Examinations</div><h1>Enter marks</h1>
+<p class="lede">Choose which class and subject you want to enter marks for.</p></div></div>
+
+<form method="get" class="pill-filter">
+  <select name="exam_id" onchange="this.form.submit()">
+    {% for e in exams %}<option value="{{ e.id }}" {{ 'selected' if exam and exam.id==e.id }}>{{ e.name }} {{ e.term }} {{ e.year or '' }} {{ '(closed)' if e.status != 'open' }}</option>{% endfor %}
+  </select>
+</form>
+
+{% if exam %}
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>Class</th><th>Subject</th><th class="num-col">Entered</th><th class="num-col">Expected</th><th></th></tr></thead>
+  <tbody>
+  {% for p in papers %}
+    <tr>
+      <td>{{ p.clabel }}</td><td>{{ p.sname }}</td>
+      <td class="num-col">{{ p.entered }}</td><td class="num-col">{{ p.expected }}</td>
+      <td><a href="{{ url_for('exams.marks_entry', eid=exam.id, cid=p.class_id, sid=p.subject_id) }}" class="btn btn-sm btn-primary">Open</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5" class="tbl-empty">You have no subjects assigned for this examination.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="empty"><h3>No examinations yet</h3></div>
+{% endif %}
+{% endblock %}

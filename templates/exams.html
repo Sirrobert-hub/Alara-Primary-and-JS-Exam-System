@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow">Examinations</div><h1>Examinations</h1></div>
+  {% if has_perm('exams.manage') %}<a href="{{ url_for('exams.exam_form') }}" class="btn btn-primary">Create examination</a>{% endif %}
+</div>
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>Name</th><th>Term</th><th class="num-col">Year</th><th class="num-col">Classes</th><th class="num-col">Papers</th><th>Progress</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for e in exams %}
+    <tr>
+      <td><a href="{{ url_for('exams.exam_detail', eid=e.id) }}">{{ e.name }}</a></td>
+      <td>{{ e.term }}</td><td class="num-col">{{ e.year or '-' }}</td>
+      <td class="num-col">{{ e.classes }}</td><td class="num-col">{{ e.papers }}</td>
+      <td style="width:120px;"><div class="bar"><span style="width:{{ e.pct }}%;"></span></div></td>
+      <td><span class="badge {{ 'badge-green' if e.status=='open' else 'badge-grey' }}">{{ 'Open' if e.status=='open' else 'Closed' }}</span></td>
+      <td><a href="{{ url_for('exams.exam_detail', eid=e.id) }}" class="btn btn-sm">Open</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="8" class="tbl-empty">No examinations yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow"><a href="{{ url_for('exams.exam_detail', eid=exam.id) }}">{{ exam.name }}</a></div>
+<h1>Classes &amp; subjects</h1><p class="lede">Tick which class sits which subject in this examination, and set marks 'out of' per subject.</p></div></div>
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>Class</th>{% for s in subjects %}<th class="center">{{ s.code }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for c in classes %}
+    <tr><td>{{ c.label }}</td>
+    {% for s in subjects %}
+      <td class="center"><input type="checkbox" name="p_{{ c.id }}_{{ s.id }}" {{ 'checked' if (c.id, s.id) in have }}></td>
+    {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr><td>Out of</td>
+    {% for s in subjects %}<td class="center"><input type="number" step="0.01" name="out_{{ s.id }}" value="{{ out_of.get(s.id, exam.out_of) }}" style="width:64px; text-align:center;"></td>{% endfor %}
+    </tr>
+  </tfoot>
+</table>
+</div>
+<div class="form-actions">
+  <button class="btn btn-primary">Save</button>
+  <a href="{{ url_for('exams.exam_detail', eid=exam.id) }}" class="btn">Done</a>
+</div>
+</form>
+{% endblock %}

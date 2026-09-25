@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">Examinations</div><h1>Verify marks</h1>
+<p class="lede">Verified marks cannot be changed by teachers. Use this after checking marks are correct.</p></div>
+{% if exam %}
+<form method="post" action="{{ url_for('exams.verify_set', eid=exam.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="verify_all">
+  <button class="btn btn-primary">Verify all complete papers</button>
+</form>
+{% endif %}
+</div>
+
+<form method="get" class="pill-filter">
+  <select name="exam_id" onchange="this.form.submit()">
+    {% for e in exams %}<option value="{{ e.id }}" {{ 'selected' if exam and exam.id==e.id }}>{{ e.name }} {{ e.term }} {{ e.year or '' }}</option>{% endfor %}
+  </select>
+</form>
+
+{% if exam %}
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>Class</th><th>Subject</th><th class="num-col">Entered</th><th class="num-col">Expected</th><th class="num-col">Mean %</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for p in papers %}
+    {% set st = stats.get((p.class_id, p.subject_id)) %}
+    <tr>
+      <td>{{ p.clabel }}</td><td>{{ p.sname }}</td>
+      <td class="num-col">{{ p.entered }}</td><td class="num-col">{{ p.expected }}</td>
+      <td class="num-col">{{ '%.1f'|format(st.mean_pct) if st and st.mean_pct is not none else '-' }}</td>
+      <td>
+        {% if p.verified and p.verified == p.entered and p.entered %}<span class="badge badge-green">Verified</span>
+        {% elif p.entered %}<span class="badge badge-gold">Entered</span>
+        {% else %}<span class="badge badge-grey">Pending</span>{% endif %}
+      </td>
+      <td class="btn-row">
+        {% if p.entered %}
+        <form method="post" action="{{ url_for('exams.verify_set', eid=exam.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="class_id" value="{{ p.class_id }}"><input type="hidden" name="subject_id" value="{{ p.subject_id }}">
+          {% if p.verified < p.entered %}
+          <input type="hidden" name="action" value="verify"><button class="btn btn-sm btn-primary">Verify</button>
+          {% else %}
+          <input type="hidden" name="action" value="unlock"><button class="btn btn-sm">Unlock</button>
+          {% endif %}
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="tbl-empty">No papers set up.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

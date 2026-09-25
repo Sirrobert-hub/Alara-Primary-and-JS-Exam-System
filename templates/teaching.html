@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">Records</div><h1>Teaching assignments</h1>
+<p class="lede">Choose which teacher handles each subject for a class. This decides who can enter marks for it.</p></div></div>
+
+<form method="get" class="pill-filter">
+  <select name="class_id" onchange="this.form.submit()">
+    {% for c in classes %}<option value="{{ c.id }}" {{ 'selected' if class_id==c.id }}>{{ c.label }}</option>{% endfor %}
+  </select>
+</form>
+
+{% if class_id %}
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="class_id" value="{{ class_id }}">
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>Subject</th><th>Teacher</th></tr></thead>
+  <tbody>
+  {% for s in subs %}
+    <tr><td>{{ s.name }} ({{ s.code }})</td>
+      <td><select name="t_{{ s.id }}"><option value="">Not assigned</option>
+        {% for t in teachers %}<option value="{{ t.id }}" {{ 'selected' if s.teacher_id==t.id }}>{{ t.full_name }}{% if t.tsc_no %} (TSC: {{ t.tsc_no }}){% endif %}</option>{% endfor %}
+      </select></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<div class="form-actions"><button class="btn btn-primary">Save assignments</button></div>
+</form>
+{% endif %}
+
+<div class="card section">
+  <h3>All assignments</h3>
+  <div class="tbl-wrap">
+  <table><thead><tr><th>Teacher</th><th>Class</th><th>Subject</th></tr></thead><tbody>
+    {% for r in by_teacher %}<tr><td><b>{{ r.full_name }}</b>{% if r.tsc_no %} <span class="muted" style="font-size:.85rem;">(TSC: {{ r.tsc_no }})</span>{% endif %}</td><td>{{ r.clabel }}</td><td>{{ r.sname }}</td></tr>
+    {% else %}<tr><td colspan="3" class="tbl-empty">No assignments yet.</td></tr>{% endfor %}
+  </tbody></table>
+  </div>
+</div>
+{% endblock %}

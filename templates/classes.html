@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow">Records</div><h1>Classes &amp; streams</h1><p class="lede">A stream is one register of students, for example Form 1 East. Leave stream blank if you don't use streams.</p></div>
+</div>
+<div class="grid cols-2">
+<div class="card">
+  <h3>Add a class</h3>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="grid cols-2">
+      <div class="field"><label>Class name</label><input type="text" name="name" placeholder="e.g. Form 1, Grade 7" required></div>
+      <div class="field"><label>Stream (optional)</label><input type="text" name="stream" placeholder="e.g. East"></div>
+    </div>
+    <div class="field"><label>Class teacher (optional)</label>
+      <select name="class_teacher_id"><option value="">-</option>
+      {% for t in teachers %}<option value="{{ t.id }}">{{ t.full_name }}{% if t.tsc_no %} (TSC: {{ t.tsc_no }}){% endif %}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn btn-primary">Add class</button>
+  </form>
+</div>
+<div class="card">
+  <h3>Move students between classes</h3>
+  <p class="small">Move all active students from one class to another (for example, promoting to the next grade). Past exam results stay recorded against the class they were in at the time.</p>
+  <form method="post" action="{{ url_for('academic.classes_move') }}" onsubmit="return confirm('Move all active students? This cannot be undone automatically.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="grid cols-2">
+      <div class="field"><label>From</label><select name="from_id" required><option value="">-</option>{% for c in classes %}<option value="{{ c.id }}">{{ c.label }} ({{ c.n_students }})</option>{% endfor %}</select></div>
+      <div class="field"><label>To</label><select name="to_id" required><option value="">-</option>{% for c in classes %}<option value="{{ c.id }}">{{ c.label }}</option>{% endfor %}</select></div>
+    </div>
+    <button class="btn btn-gold">Move students</button>
+  </form>
+</div>
+</div>
+
+<div class="tbl-wrap section">
+<table>
+  <thead><tr><th>Class</th><th>Class teacher</th><th class="num-col">Students</th><th></th></tr></thead>
+  <tbody>
+  {% for c in classes %}
+    <tr>
+      <td>{{ c.label }}</td><td>{% if c.teacher %}{{ c.teacher }}{% if c.teacher_tsc %} <span class="muted" style="font-size:.85rem;">(TSC: {{ c.teacher_tsc }})</span>{% endif %}{% else %}-{% endif %}</td><td class="num-col">{{ c.n_students }}</td>
+      <td class="btn-row">
+        <button class="btn btn-sm" onclick="document.getElementById('e{{ c.id }}').classList.toggle('hidden')">Edit</button>
+        <form method="post" action="{{ url_for('academic.class_delete', cid=c.id) }}" style="display:inline" onsubmit="return confirm('Delete this class?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    <tr id="e{{ c.id }}" class="hidden"><td colspan="4">
+      <form method="post" action="{{ url_for('academic.class_edit', cid=c.id) }}" class="flex gap-8 items-center flex-wrap">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="name" value="{{ c.name }}" style="width:140px;">
+        <input type="text" name="stream" value="{{ c.stream }}" placeholder="Stream" style="width:120px;">
+        <select name="class_teacher_id" style="width:200px;"><option value="">-</option>
+          {% for t in teachers %}<option value="{{ t.id }}" {{ 'selected' if c.class_teacher_id==t.id }}>{{ t.full_name }}{% if t.tsc_no %} (TSC: {{ t.tsc_no }}){% endif %}</option>{% endfor %}
+        </select>
+        <button class="btn btn-sm btn-primary">Save</button>
+      </form>
+    </td></tr>
+  {% else %}
+    <tr><td colspan="4" class="tbl-empty">No classes yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

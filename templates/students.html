@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow">Records</div><h1>Students</h1><p class="lede">{{ total }} student{{ 's' if total != 1 }} found.</p></div>
+  <div class="btn-row">
+    {% if has_perm('students.manage') %}
+    <a href="{{ url_for('academic.students_import') }}" class="btn">Upload Excel / CSV</a>
+    <a href="{{ url_for('academic.student_form') }}" class="btn btn-primary">Add student</a>
+    {% endif %}
+    <a href="{{ url_for('academic.students_export', class_id=f.class_id) }}" class="btn">Download Excel</a>
+  </div>
+</div>
+
+<form method="get" class="pill-filter">
+  <input type="search" name="q" placeholder="Search name, admission no, ULI, assessment no..." value="{{ f.q }}" style="min-width:260px;">
+  <select name="class_id" onchange="this.form.submit()">
+    <option value="">All classes</option>
+    {% for c in classes %}<option value="{{ c.id }}" {{ 'selected' if f.class_id==c.id }}>{{ c.label }}</option>{% endfor %}
+  </select>
+  <select name="status" onchange="this.form.submit()">
+    <option value="active" {{ 'selected' if f.status=='active' }}>Active</option>
+    <option value="left" {{ 'selected' if f.status=='left' }}>Left</option>
+    <option value="all" {{ 'selected' if f.status=='all' }}>All</option>
+  </select>
+  <button class="btn btn-sm">Search</button>
+  {% if f.q or f.class_id or (f.status and f.status != 'active') %}
+  <a href="{{ url_for('academic.students') }}" class="btn btn-sm btn-ghost">Reset</a>
+  {% endif %}
+</form>
+
+<div class="tbl-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Adm No</th>
+      <th>ULI</th>
+      <th>Assessment No</th>
+      <th>Full Name</th>
+      <th>Gender</th>
+      <th>Class</th>
+      <th>Guardian</th>
+      <th>Phone</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for s in students %}
+    <tr>
+      <td><b>{{ s.adm_no }}</b></td>
+      <td>
+        {% if s.uli %}
+        <span class="badge badge-grey" style="font-family:var(--mono); font-size:.78rem;">{{ s.uli }}</span>
+        {% else %}
+        <span class="muted">-</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if s.assessment_no %}
+        <span class="badge badge-grey" style="font-family:var(--mono); font-size:.78rem;">{{ s.assessment_no }}</span>
+        {% else %}
+        <span class="muted">-</span>
+        {% endif %}
+      </td>
+      <td>
+        <a href="{{ url_for('results.student_history', sid=s.id) }}" style="font-weight:600;">{{ s.full_name }}</a>
+        {% if s.status == 'left' %}<span class="badge badge-red" style="margin-left:4px;">Left</span>{% endif %}
+      </td>
+      <td>{{ s.gender or '-' }}</td>
+      <td>{{ s.class_label or '-' }}</td>
+      <td>{{ s.guardian or '-' }}</td>
+      <td>{{ s.phone or '-' }}</td>
+      <td class="btn-row" style="white-space:nowrap;">
+        <a href="{{ url_for('results.student_history', sid=s.id) }}" class="btn btn-sm">History</a>
+        {% if has_perm('students.manage') %}
+        <a href="{{ url_for('academic.student_form', sid=s.id) }}" class="btn btn-sm">Edit</a>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="9" class="tbl-empty">No students match this filter.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if pages > 1 %}
+<div class="pager">
+  {% if page > 1 %}<a href="{{ url_for('academic.students', page=page-1, **f) }}" class="btn btn-sm">Previous</a>{% endif %}
+  Page {{ page }} of {{ pages }}
+  {% if page < pages %}<a href="{{ url_for('academic.students', page=page+1, **f) }}" class="btn btn-sm">Next</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow">Results</div><h1>Class results</h1></div>
+  {% if res %}
+  <div class="btn-row">
+    <a href="{{ url_for('results.class_results_download', exam_id=eid, scope=scope, fmt='xlsx') }}" class="btn">Download Excel</a>
+    <a href="{{ url_for('results.class_results_download', exam_id=eid, scope=scope, fmt='pdf') }}" class="btn">Download PDF</a>
+  </div>
+  {% endif %}
+</div>
+
+<form method="get" class="pill-filter">
+  <select name="exam_id" onchange="this.form.submit()">
+    {% for e in exams %}<option value="{{ e.id }}" {{ 'selected' if eid==e.id }}>{{ e.name }} {{ e.term }} {{ e.year or '' }}</option>{% endfor %}
+  </select>
+  <select name="scope" onchange="this.form.submit()">
+    {% for o in options %}<option value="{{ o.value }}" {{ 'selected' if scope==o.value }}>{{ o.label }}</option>{% endfor %}
+  </select>
+</form>
+
+{% if tiles %}
+<div class="grid cols-4 section">
+  <div class="tile"><div class="num">{{ tiles.n }}</div><div class="lab">Students with results</div></div>
+  <div class="tile"><div class="num">{{ '%.1f'|format(tiles.mean) }}%</div><div class="lab">Class mean</div></div>
+  <div class="tile"><div class="num">{{ '%.1f'|format(tiles.points) }}</div><div class="lab">Mean points</div></div>
+  <div class="tile accent"><div class="num" style="font-size:1.1rem;">{{ tiles.top.name }}</div><div class="lab">Top student ({{ '%.1f'|format(tiles.top.avg_pct) }}%)</div></div>
+</div>
+{% if dist %}
+<div class="card section">
+  <h3>Grade distribution</h3>
+  <div class="flex gap-12 flex-wrap">
+  {% for g, n in dist %}<div class="tile" style="min-width:70px;"><div class="num">{{ n }}</div><div class="lab">{{ g }}</div></div>{% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+{% if mt %}
+<div class="tbl-wrap section">
+<table>
+  <thead><tr>{% for h in mt.headers %}<th class="{{ 'num-col' if h not in ['Pos','Adm No','Name','Class','Grade'] }}">{{ h }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for row in mt.rows %}
+    <tr>{% for cell in row %}<td class="{{ 'num-col' if cell is number }}">{{ ('%.1f'|format(cell)) if cell is number and cell != cell|int else cell }}</td>{% endfor %}</tr>
+  {% else %}
+    <tr><td colspan="{{ mt.headers|length }}" class="tbl-empty">No results yet.</td></tr>
+  {% endfor %}
+  </tbody>
+  {% if mt.footer %}
+  <tfoot><tr>{% for cell in mt.footer %}<td class="{{ 'num-col' if cell is number }}">{{ ('%.1f'|format(cell)) if cell is number and cell != cell|int else (cell if cell != '' else '') }}</td>{% endfor %}</tr></tfoot>
+  {% endif %}
+</table>
+</div>
+{% endif %}
+{% endblock %}

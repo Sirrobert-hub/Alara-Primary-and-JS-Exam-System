@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow">Overview</div><h1>Dashboard</h1></div>
+</div>
+
+<div class="grid cols-4 section">
+  <div class="tile"><div class="num">{{ counts.students }}</div><div class="lab">Active students</div></div>
+  <div class="tile"><div class="num">{{ counts.classes }}</div><div class="lab">Classes &amp; streams</div></div>
+  <div class="tile"><div class="num">{{ counts.subjects }}</div><div class="lab">Subjects</div></div>
+  <div class="tile"><div class="num">{{ counts.teachers }}</div><div class="lab">Teachers &amp; staff</div></div>
+</div>
+
+{% if progress %}
+<div class="card section">
+  <div class="card-head">
+    <h2>{{ progress.exam.name }} {{ progress.exam.term }} {{ progress.exam.year or '' }}</h2>
+    <span class="badge {{ 'badge-green' if progress.exam.status=='open' else 'badge-grey' }}">{{ 'Open' if progress.exam.status=='open' else 'Closed' }}</span>
+  </div>
+  <div class="bar" style="margin-bottom:6px;"><span style="width:{{ progress.pct }}%;"></span></div>
+  <p class="small mb-0">{{ progress.got }} of {{ progress.expected }} expected marks entered ({{ progress.pct }}%).</p>
+  {% if my_papers %}
+  <div class="tbl-wrap" style="margin-top:14px;">
+    <table>
+      <thead><tr><th>Class</th><th>Subject</th><th class="num-col">Entered</th><th class="num-col">Expected</th><th></th></tr></thead>
+      <tbody>
+      {% for p in my_papers %}
+        <tr>
+          <td>{{ p.clabel }}</td><td>{{ p.sname }}</td>
+          <td class="num-col">{{ p.entered }}</td><td class="num-col">{{ p.expected }}</td>
+          <td><a href="{{ url_for('exams.marks_entry', eid=p.exam_id, cid=p.class_id, sid=p.subject_id) }}" class="btn btn-sm btn-primary">Enter marks</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  <div class="form-actions">
+    <a href="{{ url_for('exams.exam_detail', eid=progress.exam.id) }}" class="btn btn-primary">Open examination</a>
+    <a href="{{ url_for('results.reports_home', exam_id=progress.exam.id) }}" class="btn">Report cards</a>
+  </div>
+</div>
+{% else %}
+<div class="empty section">
+  <h3>No examinations yet</h3>
+  <p>Create your first examination to start recording marks.</p>
+  {% if has_perm('exams.manage') %}<a href="{{ url_for('exams.exam_form') }}" class="btn btn-primary">Create examination</a>{% endif %}
+</div>
+{% endif %}
+
+<div class="grid cols-2">
+  {% if has_perm('audit.view') %}
+  <div class="card">
+    <div class="card-head"><h3>Recent activity</h3><a href="{{ url_for('system.audit_log') }}" class="small">View all</a></div>
+    {% if recent %}
+    <table><tbody>
+      {% for r in recent %}
+      <tr><td class="small" style="white-space:nowrap;">{{ r.ts[:16] }}</td><td class="small">{{ r.username }}</td><td class="small">{{ r.action }}</td></tr>
+      {% endfor %}
+    </tbody></table>
+    {% else %}<p class="small">No activity recorded yet.</p>{% endif %}
+  </div>
+  {% endif %}
+  {% if has_perm('backup.create') %}
+  <div class="card">
+    <div class="card-head"><h3>Backup</h3><a href="{{ url_for('system.backup_home') }}" class="small">Manage</a></div>
+    {% if last_backup %}
+    <p class="small">Last backup: <b>{{ last_backup.time }}</b> ({{ (last_backup.size/1024)|round|int }} KB)</p>
+    {% else %}<p class="small">No backup has been made yet. Data lives only on this computer, so keep regular backups.</p>{% endif %}
+    <a href="{{ url_for('system.backup_home') }}" class="btn btn-sm btn-primary">Back up now</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

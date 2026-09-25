@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">System</div><h1>Grading scale</h1>
+<p class="lede">Percentage bands used to grade every examination, including past ones.</p></div></div>
+
+<div class="card">
+  <h3>Use a ready-made scale</h3>
+  <div class="btn-row">
+  {% for key, (label, _) in presets.items() %}
+    <form method="post" onsubmit="return confirm('Replace the current grading scale with {{ label }}?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="preset" value="{{ key }}">
+      <button class="btn">{{ label }}</button>
+    </form>
+  {% endfor %}
+  </div>
+</div>
+
+<div class="card section">
+  <h3>Custom scale</h3>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="tbl-wrap">
+    <table id="bandtbl">
+      <thead><tr><th>Minimum %</th><th>Grade</th><th>Points</th><th>Remark</th><th>Suggested comment</th><th></th></tr></thead>
+      <tbody>
+      {% for b in bands %}
+      <tr>
+        <td><input type="number" step="0.1" name="min_pct" value="{{ b.min_pct }}" style="width:80px;"></td>
+        <td><input type="text" name="grade" value="{{ b.grade }}" style="width:60px;"></td>
+        <td><input type="number" step="0.1" name="points" value="{{ b.points }}" style="width:70px;"></td>
+        <td><input type="text" name="remark" value="{{ b.remark }}"></td>
+        <td><input type="text" name="comment" value="{{ b.comment }}"></td>
+        <td><button type="button" class="btn btn-sm" onclick="this.closest('tr').remove()">Remove</button></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <button type="button" class="btn btn-sm" style="margin-top:10px;" onclick="
+      const row=document.querySelector('#bandtbl tbody tr').cloneNode(true);
+      row.querySelectorAll('input').forEach(i=>i.value='');
+      document.querySelector('#bandtbl tbody').appendChild(row);">Add band</button>
+    <div class="form-actions"><button class="btn btn-primary">Save custom scale</button></div>
+  </form>
+</div>
+{% endblock %}

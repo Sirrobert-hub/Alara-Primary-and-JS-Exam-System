@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">System</div><h1>Roles &amp; permissions</h1>
+<p class="lede">Administrators always have full access. Choose what Examination officers, Teachers and Viewers can do.</p></div></div>
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>Permission</th>{% for r in editable %}<th class="center">{{ roles[r] }}<br><span class="small">{{ counts.get(r,0) }} user(s)</span></th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for perm, label in perms %}
+    <tr><td>{{ label }}</td>
+    {% for r in editable %}
+      <td class="center"><input type="checkbox" name="{{ r }}:{{ perm }}" {{ 'checked' if (r,perm) in granted }}></td>
+    {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<div class="form-actions"><button class="btn btn-primary">Save permissions</button></div>
+</form>
+{% endblock %}

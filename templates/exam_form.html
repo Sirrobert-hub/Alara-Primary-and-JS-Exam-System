@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow"><a href="{{ url_for('exams.exams') }}">Examinations</a></div>
+<h1>{{ 'Edit examination' if eid else 'Create examination' }}</h1></div></div>
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="card">
+  <div class="grid cols-3">
+    <div class="field"><label>Examination name</label><input type="text" name="name" value="{{ exam.name }}" placeholder="e.g. End of Term 1 Exam" required></div>
+    <div class="field"><label>Term</label><input type="text" name="term" value="{{ exam.term }}" placeholder="e.g. Term 1"></div>
+    <div class="field"><label>Year</label><input type="number" name="year" value="{{ exam.year or '' }}"></div>
+  </div>
+  <div class="grid cols-3">
+    <div class="field"><label>Default marks out of</label><input type="number" step="0.01" name="out_of" value="{{ exam.out_of }}" required></div>
+    <div class="field"><label>Closing date (optional)</label><input type="date" name="closing_date" value="{{ exam.closing_date }}"></div>
+    <div class="field"><label>Next term opens (optional)</label><input type="date" name="opening_date" value="{{ exam.opening_date }}"></div>
+  </div>
+</div>
+
+{% if not eid %}
+<div class="card section">
+  <h3>Classes sitting this exam</h3>
+  <div class="check-grid">
+    {% for c in classes %}<label class="checkline"><input type="checkbox" name="classes" value="{{ c.id }}" {{ 'checked' if c.id in sel_c }}> {{ c.label }}</label>{% endfor %}
+  </div>
+</div>
+<div class="card section">
+  <h3>Subjects examined</h3>
+  <div class="check-grid">
+    {% for s in subjects %}<label class="checkline"><input type="checkbox" name="subjects" value="{{ s.id }}" {{ 'checked' if s.id in sel_s }}> {{ s.name }}</label>{% endfor %}
+  </div>
+  <p class="hint">Every selected class will sit every selected subject at first. You can fine-tune this afterwards.</p>
+</div>
+{% endif %}
+
+<div class="form-actions">
+  <button class="btn btn-primary">{{ 'Save changes' if eid else 'Create examination' }}</button>
+  <a href="{{ url_for('exams.exams') }}" class="btn">Cancel</a>
+</div>
+</form>
+{% endblock %}

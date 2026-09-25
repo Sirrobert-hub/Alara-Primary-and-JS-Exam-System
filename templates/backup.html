@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">System</div><h1>Backup &amp; restore</h1>
+<p class="lede">All data lives only on this computer. Back up regularly, and keep a copy somewhere safe (a USB drive or another folder).</p></div>
+<form method="post" action="{{ url_for('system.backup_create') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-primary">Back up now</button>
+</form>
+</div>
+
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>File</th><th>Created</th><th class="num-col">Size</th><th></th></tr></thead>
+  <tbody>
+  {% for b in backups %}
+    <tr>
+      <td>{{ b.name }}</td><td>{{ b.time }}</td><td class="num-col">{{ (b.size/1024)|round|int }} KB</td>
+      <td class="btn-row">
+        <a href="{{ url_for('system.backup_download', name=b.name) }}" class="btn btn-sm">Download</a>
+        {% if is_admin() %}
+        <form method="post" action="{{ url_for('system.backup_delete', name=b.name) }}" style="display:inline" onsubmit="return confirm('Delete this backup file?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4" class="tbl-empty">No backups yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if is_admin() %}
+<div class="card section">
+  <h3>Restore from a backup</h3>
+  <p class="small">This replaces all current data with what is in the backup file. A safety copy of your current data is made automatically first.</p>
+  <form method="post" action="{{ url_for('system.backup_restore') }}" enctype="multipart/form-data" onsubmit="return confirm('This will replace all current data. Continue?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label>Backup file (.zip)</label><input type="file" name="file" accept=".zip" required></div>
+    <div class="field"><label>Type RESTORE to confirm</label><input type="text" name="confirm" required></div>
+    <button class="btn btn-danger">Restore data</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

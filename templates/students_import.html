@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="eyebrow"><a href="{{ url_for('academic.students') }}">Students</a></div>
+    <h1>Upload students from Excel or CSV</h1>
+    <p class="lede">Import learners into the system using Excel spreadsheet or CSV file with the standard national/CBC student schema.</p>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h3>1. Download student template</h3>
+    <p class="small">The file must follow the standard 10-column layout below. You can download the pre-formatted Excel or CSV template ready to fill in:</p>
+    
+    <div style="background:var(--green-tint); border:1px solid var(--sage-line); border-radius:4px; padding:12px 14px; margin:12px 0; font-size:.82rem;">
+      <b style="color:var(--green-deep); display:block; margin-bottom:6px;">Required Column Format:</b>
+      <code style="display:block; white-space:pre-wrap; word-break:break-all; font-size:.8rem; line-height:1.6; background:#fff; padding:8px 10px; border:1px solid var(--sage-line); border-radius:3px;">Admission No | Unique Learner Identifier (ULI) | ASSESSMENT NO. | Full Name | Gender | Grade | Stream | Date of Birth | Guardian | Phone</code>
+    </div>
+
+    <ul class="small muted" style="padding-left:18px; line-height:1.55; margin-bottom:16px;">
+      <li><b>Admission No</b> &amp; <b>Full Name</b> are required. Admission numbers must be unique.</li>
+      <li><b>Unique Learner Identifier (ULI)</b>: NEMIS / UPI / ULI code for CBC tracking.</li>
+      <li><b>ASSESSMENT NO.</b>: National index / CBA assessment number (e.g. KPSEA).</li>
+      <li><b>Grade &amp; Stream</b>: Class name (e.g. <i>Grade 7</i>) and stream (e.g. <i>East</i>).</li>
+      <li><b>Gender</b>: <code>M</code> (Male) or <code>F</code> (Female).</li>
+      <li><b>Date of Birth</b>: Standard date format (e.g. <code>2012-05-18</code> or <code>18/05/2012</code>).</li>
+    </ul>
+
+    <div class="btn-row">
+      <a href="{{ url_for('academic.students_template') }}" class="btn btn-primary">Download Excel (.xlsx)</a>
+      <a href="{{ url_for('academic.students_template_csv') }}" class="btn">Download CSV (.csv)</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>2. Upload your file</h3>
+    <p class="small">Choose your filled-in <code>.xlsx</code> or <code>.csv</code> spreadsheet to upload.</p>
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label>Spreadsheet or CSV file</label>
+        <input type="file" name="file" accept=".xlsx,.xlsm,.csv,.tsv,.txt" required>
+        <div class="hint">Accepts Microsoft Excel (.xlsx, .xlsm) and CSV files.</div>
+      </div>
+      <div class="field">
+        <label class="checkline">
+          <input type="checkbox" name="update" checked>
+          <span>Update existing students (matching by Admission Number)</span>
+        </label>
+      </div>
+      <div class="field">
+        <label class="checkline">
+          <input type="checkbox" name="make_classes" checked>
+          <span>Automatically create classes/streams if they do not exist yet</span>
+        </label>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary">Upload &amp; Import Students</button>
+        <a href="{{ url_for('academic.students') }}" class="btn">Back to Students</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if report %}
+<div class="card section" style="margin-top:20px;">
+  <div class="card-head">
+    <h3>Import Summary</h3>
+    <span class="badge badge-green">{{ report.added }} Added</span>
+    <span class="badge badge-gold">{{ report.updated }} Updated</span>
+    {% if report.skipped %}<span class="badge badge-grey">{{ report.skipped }} Skipped</span>{% endif %}
+  </div>
+  <p>Processed upload: <b>{{ report.added }}</b> student(s) added, <b>{{ report.updated }}</b> updated, <b>{{ report.skipped }}</b> skipped.</p>
+  {% if report.problems %}
+  <p class="small"><b>Processing notes / warnings:</b></p>
+  <ul class="small" style="color:var(--ink-soft); max-height:220px; overflow-y:auto; background:var(--green-tint); padding:10px 24px; border-radius:4px;">
+    {% for p in report.problems %}<li>{{ p }}</li>{% endfor %}
+  </ul>
+  {% if report.more %}<p class="small">...and {{ report.more }} more notes.</p>{% endif %}
+  {% endif %}
+  <div class="btn-row" style="margin-top:14px;">
+    <a href="{{ url_for('academic.students') }}" class="btn btn-primary">View Students Directory</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

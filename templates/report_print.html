@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ title }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="print-toolbar no-print">
+  <b>{{ title }}</b>
+  <span class="spacer"></span>
+  <button class="btn btn-primary" onclick="window.print()">Print</button>
+  <a href="javascript:history.back()" class="btn">Back</a>
+</div>
+
+{% for ctx in contexts %}
+{% set s = ctx.student %}{% set e = ctx.exam %}
+<div class="report-sheet">
+  <div class="rep-head">
+    {% if has_logo %}<img src="{{ url_for('system.logo_image') }}" alt="School logo">{% endif %}
+    <div>
+      <div class="school">{{ st.school_name }}</div>
+      {% if st.school_motto %}<div class="small muted">{{ st.school_motto }}</div>{% endif %}
+      <div class="contact">{{ [st.school_address, st.school_phone, st.school_email] | select | join(' \u00b7 ') }}</div>
+    </div>
+  </div>
+  <div class="rep-bar"><span>Student report card</span><span>{{ e.name }} {{ e.term }} {{ e.year or '' }}</span></div>
+  <div class="rep-info">
+    <div><b>Name:</b> {{ s.name }}</div><div><b>Admission No:</b> {{ s.adm_no }}</div>
+    <div><b>Class:</b> {{ ctx.class_label }}</div><div><b>Gender:</b> {{ {'M':'Male','F':'Female'}.get(s.gender, s.gender) }}</div>
+    {% if s.uli %}<div><b>ULI:</b> {{ s.uli }}</div>{% endif %}
+    {% if s.assessment_no %}<div><b>Assessment No:</b> {{ s.assessment_no }}</div>{% endif %}
+  </div>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Subject</th><th class="num-col">Marks</th><th class="num-col">Out of</th><th class="num-col">%</th><th class="center">Grade</th>
+      {% if st.show_subject_position == '1' %}<th class="num-col">Pos</th>{% endif %}<th>Remark</th><th>Teacher</th></tr></thead>
+    <tbody>
+    {% for r in ctx.rows %}
+      <tr>
+        <td>{{ r.subject }}</td>
+        <td class="num-col">{{ 'ABS' if r.absent else (r.score|round(2)) }}</td>
+        <td class="num-col">{{ r.out_of|round(0)|int if r.out_of == r.out_of|int else r.out_of }}</td>
+        <td class="num-col" style="{{ 'color:var(--red); font-weight:700;' if r.pct is not none and r.pct < ctx.pass_mark }}">{{ '-' if r.absent else '%.1f'|format(r.pct) }}</td>
+        <td class="center" style="{{ 'color:var(--red); font-weight:700;' if r.pct is not none and r.pct < ctx.pass_mark }}">{{ '-' if r.absent else r.grade }}</td>
+        {% if st.show_subject_position == '1' %}<td class="num-col">{{ r.pos or '-' }}</td>{% endif %}
+        <td>{{ 'Absent' if r.absent else r.remark }}</td><td>{{ r.teacher }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <div class="rep-summary">
+    <div><div class="lab">Total</div><div class="val">{{ s.total|round(1) }} / {{ s.possible|round(1) }}</div></div>
+    <div><div class="lab">Average</div><div class="val">{{ '%.1f'|format(s.avg_pct) if s.n else '-' }}%</div></div>
+    <div><div class="lab">Mean grade</div><div class="val">{{ s.grade or '-' }}</div></div>
+    <div><div class="lab">Position</div><div class="val">{{ s.pos_stream or '-' }} / {{ s.n_stream or '-' }}</div></div>
+  </div>
+  <p class="small muted">Grade key (percentage): {% for b in ctx.bands %}{{ b.grade }} {{ b.min_pct|round(0)|int }}+ &nbsp; {% endfor %}</p>
+
+  <div class="rep-remark"><div class="lab">Class teacher's remarks</div>{{ ctx.teacher_remark or ' ' }}
+    <p class="small muted mt-0" style="margin-top:10px;">Signature: ________________________ &nbsp; Date: ______________</p></div>
+  <div class="rep-remark" style="margin-top:8px;"><div class="lab">Principal's remarks</div>{{ ctx.principal_remark or ' ' }}
+    <p class="small muted mt-0" style="margin-top:10px;">Signature: ________________________ &nbsp; Date: ______________{% if st.principal_name %} ({{ st.principal_name }}){% endif %}</p></div>
+
+  {% if e.closing_date or e.opening_date %}
+  <p style="margin-top:10px; font-weight:700;">
+    {% if e.closing_date %}Closing date: {{ e.closing_date }}{% endif %}
+    {% if e.opening_date %}&nbsp;&nbsp;&nbsp;Next term opens: {{ e.opening_date }}{% endif %}
+  </p>
+  {% endif %}
+  {% if st.report_footer %}<p class="small muted center" style="margin-top:8px;">{{ st.report_footer }}</p>{% endif %}
+</div>
+{% endfor %}
+</body>
+</html>

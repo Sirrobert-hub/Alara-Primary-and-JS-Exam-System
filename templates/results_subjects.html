@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow">Results</div><h1>Subject results</h1></div>
+  {% if res %}
+  <div class="btn-row">
+    <a href="{{ url_for('results.subject_results_download', exam_id=eid, class_id=class_id, fmt='xlsx') }}" class="btn">Download Excel</a>
+    <a href="{{ url_for('results.subject_results_download', exam_id=eid, class_id=class_id, fmt='pdf') }}" class="btn">Download PDF</a>
+  </div>
+  {% endif %}
+</div>
+<form method="get" class="pill-filter">
+  <select name="exam_id" onchange="this.form.submit()">
+    {% for e in exams %}<option value="{{ e.id }}" {{ 'selected' if eid==e.id }}>{{ e.name }} {{ e.term }} {{ e.year or '' }}</option>{% endfor %}
+  </select>
+  <select name="class_id" onchange="this.form.submit()">
+    <option value="">All classes</option>
+    {% for c in classes %}<option value="{{ c.id }}" {{ 'selected' if class_id==c.id }}>{{ c.label }}</option>{% endfor %}
+  </select>
+</form>
+
+{% if rows %}
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>Class</th><th>Subject</th><th>Teacher</th><th class="num-col">Sat</th><th class="num-col">Absent</th>
+    <th class="num-col">Mean marks</th><th class="num-col">Mean %</th><th class="num-col">High</th><th class="num-col">Low</th><th class="num-col">Pass %</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ r.class }}</td><td>{{ r.subject }}</td><td>{{ r.teacher or '-' }}</td>
+      <td class="num-col">{{ r.sat }}</td><td class="num-col">{{ r.absent }}</td>
+      <td class="num-col">{{ '%.1f'|format(r.mean_score) if r.mean_score is not none else '-' }}</td>
+      <td class="num-col">{{ '%.1f'|format(r.mean_pct) if r.mean_pct is not none else '-' }}</td>
+      <td class="num-col">{{ r.high if r.high is not none else '-' }}</td>
+      <td class="num-col">{{ r.low if r.low is not none else '-' }}</td>
+      <td class="num-col">{{ '%.0f'|format(r.pass_rate) if r.pass_rate is not none else '-' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% elif res %}
+<div class="empty"><h3>No results</h3><p>You have no subjects to view for this examination.</p></div>
+{% endif %}
+{% endblock %}

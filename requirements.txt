@@ -1,0 +1,6 @@
+Flask>=3.0
+openpyxl>=3.1
+reportlab>=4.0
+Pillow>=10.0
+Werkzeug>=3.0
+gunicorn>=21.2.0

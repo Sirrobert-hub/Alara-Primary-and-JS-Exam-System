@@ -1,0 +1,9 @@
+{% with msgs = get_flashed_messages(with_categories=true) %}
+{% if msgs %}
+<div class="flashes">
+  {% for cat, m in msgs %}
+  <div class="flash flash-{{ 'ok' if cat=='ok' else 'error' }}">{{ m }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}

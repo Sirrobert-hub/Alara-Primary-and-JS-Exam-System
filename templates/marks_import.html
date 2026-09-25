@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">Examinations</div><h1>Upload marks from Excel</h1>
+<p class="lede">Use this when you have marks for many students, for example from a spreadsheet you already keep.</p></div></div>
+
+<form method="get" class="pill-filter">
+  <select name="exam_id" onchange="this.form.submit()">
+    <option value="">Choose examination</option>
+    {% for e in exams %}<option value="{{ e.id }}" {{ 'selected' if eid==e.id }}>{{ e.name }} {{ e.term }} {{ e.year or '' }}</option>{% endfor %}
+  </select>
+  {% if eid %}
+  <select name="class_id" onchange="this.form.submit()">
+    <option value="">Choose class</option>
+    {% for c in classes %}<option value="{{ c.id }}" {{ 'selected' if cid==c.id }}>{{ c.label }}</option>{% endfor %}
+  </select>
+  {% endif %}
+</form>
+
+{% if eid and cid %}
+<div class="grid cols-2">
+<div class="card">
+  <h3>1. Get the template for this class</h3>
+  <p class="small">The template lists your students and the subjects you can enter, with existing marks already filled in.</p>
+  <a href="{{ url_for('exams.marks_template', eid=eid, cid=cid) }}" class="btn">Download template</a>
+</div>
+<div class="card">
+  <h3>2. Upload your completed file</h3>
+  <form method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="exam_id" value="{{ eid }}"><input type="hidden" name="class_id" value="{{ cid }}">
+    <div class="field"><label>Excel file (.xlsx)</label><input type="file" name="file" accept=".xlsx,.xlsm" required></div>
+    <button class="btn btn-primary">Check file</button>
+  </form>
+</div>
+</div>
+{% elif eid %}
+<p class="small">Choose a class above to continue.</p>
+{% endif %}
+
+{% if preview %}
+<div class="card section">
+  <h3>Preview</h3>
+  {% if preview.errors %}
+    <div class="flash flash-error">Please fix these problems and upload again:</div>
+    <ul class="small">{% for e in preview.errors[:30] %}<li>{{ e }}</li>{% endfor %}</ul>
+  {% else %}
+    {% for w in preview.warnings %}<div class="flash flash-error">{{ w }}</div>{% endfor %}
+    <p>{{ preview.matched }} students matched. <b>{{ preview.new }} new marks</b> and <b>{{ preview.changed }} changed marks</b> will be saved ({{ preview.unchanged }} unchanged).</p>
+    {% if preview.preview %}
+    <div class="tbl-wrap">
+    <table><thead><tr><th>Adm No</th><th>Name</th><th>Subject</th><th>Was</th><th>New</th></tr></thead><tbody>
+      {% for adm, name, code, was, new in preview.preview %}
+      <tr><td>{{ adm }}</td><td>{{ name }}</td><td>{{ code }}</td><td>{{ was }}</td><td><b>{{ new }}</b></td></tr>
+      {% endfor %}
+    </tbody></table>
+    </div>
+    {% endif %}
+    {% if preview.token %}
+    <form method="post" action="{{ url_for('exams.marks_import_confirm') }}" class="form-actions">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="exam_id" value="{{ eid }}"><input type="hidden" name="class_id" value="{{ cid }}">
+      <input type="hidden" name="token" value="{{ preview.token }}">
+      <button class="btn btn-primary">Confirm and save these marks</button>
+    </form>
+    {% else %}<p class="small">Nothing to save.</p>{% endif %}
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

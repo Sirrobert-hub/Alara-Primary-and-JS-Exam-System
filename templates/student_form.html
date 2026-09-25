@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="eyebrow"><a href="{{ url_for('academic.students') }}">Students</a></div>
+    <h1>{{ 'Edit student' if sid else 'Add student' }}</h1>
+    <p class="lede">{{ 'Update student profile details and government identifiers.' if sid else 'Enroll a new learner with their admission and assessment details.' }}</p>
+  </div>
+</div>
+
+<div class="card" style="max-width:680px;">
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div class="grid cols-3">
+      <div class="field">
+        <label>Admission No <span style="color:var(--red);">*</span></label>
+        <input type="text" name="adm_no" value="{{ st.adm_no or '' }}" required placeholder="e.g. 1045">
+      </div>
+      <div class="field">
+        <label>Unique Learner Identifier (ULI)</label>
+        <input type="text" name="uli" value="{{ st.uli or '' }}" placeholder="e.g. NEMIS / UPI / ULI">
+        <div class="hint">Government CBC identifier</div>
+      </div>
+      <div class="field">
+        <label>ASSESSMENT NO.</label>
+        <input type="text" name="assessment_no" value="{{ st.assessment_no or '' }}" placeholder="e.g. KPSEA-001">
+        <div class="hint">National assessment index</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Full name <span style="color:var(--red);">*</span></label>
+      <input type="text" name="full_name" value="{{ st.full_name or '' }}" required placeholder="e.g. Amina Otieno">
+    </div>
+
+    <div class="grid cols-3">
+      <div class="field">
+        <label>Gender</label>
+        <select name="gender">
+          <option value="">-</option>
+          <option value="M" {{ 'selected' if st.gender=='M' }}>Male</option>
+          <option value="F" {{ 'selected' if st.gender=='F' }}>Female</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Date of birth</label>
+        <input type="date" name="dob" value="{{ st.dob or '' }}">
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select name="status">
+          <option value="active" {{ 'selected' if st.status=='active' or not st.status }}>Active</option>
+          <option value="left" {{ 'selected' if st.status=='left' }}>Left</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Class &amp; Stream</label>
+      <select name="class_id">
+        <option value="">Not assigned</option>
+        {% for c in classes %}
+        <option value="{{ c.id }}" {{ 'selected' if st.class_id==c.id }}>{{ c.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="grid cols-2">
+      <div class="field">
+        <label>Guardian / Parent</label>
+        <input type="text" name="guardian" value="{{ st.guardian or '' }}" placeholder="Parent or guardian name">
+      </div>
+      <div class="field">
+        <label>Guardian Phone</label>
+        <input type="tel" name="phone" value="{{ st.phone or '' }}" placeholder="e.g. 0712345678">
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary">{{ 'Save changes' if sid else 'Add student' }}</button>
+      {% if not sid %}<button class="btn" name="add_another" value="1">Save &amp; add another</button>{% endif %}
+      <a href="{{ url_for('academic.students') }}" class="btn">Cancel</a>
+    </div>
+  </form>
+
+  {% if sid %}
+  <hr style="border:none; border-top:1px solid var(--sage-line); margin:20px 0 16px;">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <span class="small muted">Remove this student record permanently from the school system.</span>
+    <form method="post" action="{{ url_for('academic.student_delete', sid=sid) }}" onsubmit="return confirm('Permanently delete {{ student.full_name }} ({{ student.adm_no }})? All associated records will be removed. This cannot be undone.');" style="margin:0;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger btn-sm">Delete student</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

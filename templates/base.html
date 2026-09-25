@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ school.school_name if school else 'School Exams' }}{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% if user %}
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="mark">{{ school.school_name if school and school.school_name != 'Your School Name' else 'Exam Register' }}</div>
+      <div class="sub">Examination Management</div>
+    </div>
+    <nav class="nav">
+      <a href="{{ url_for('system.dashboard') }}" class="{{ 'active' if request.endpoint=='system.dashboard' }}"><span class="ic">&#8962;</span> Dashboard</a>
+
+      <div class="group-label">Records</div>
+      {% if has_perm('students.view') or has_perm('students.manage') %}
+      <a href="{{ url_for('academic.students') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('academic.student') }}"><span class="ic">&#9776;</span> Students</a>
+      {% endif %}
+      {% if has_perm('classes.manage') %}
+      <a href="{{ url_for('academic.classes') }}" class="{{ 'active' if request.endpoint=='academic.classes' }}"><span class="ic">&#8862;</span> Classes &amp; streams</a>
+      {% endif %}
+      {% if has_perm('subjects.manage') %}
+      <a href="{{ url_for('academic.subjects') }}" class="{{ 'active' if request.endpoint=='academic.subjects' }}"><span class="ic">&#8801;</span> Subjects</a>
+      <a href="{{ url_for('academic.teaching') }}" class="{{ 'active' if request.endpoint=='academic.teaching' }}"><span class="ic">&#9782;</span> Teaching assignments</a>
+      {% endif %}
+
+      <div class="group-label">Examinations</div>
+      <a href="{{ url_for('exams.exams') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('exams.exam') }}"><span class="ic">&#9998;</span> Examinations</a>
+      <a href="{{ url_for('exams.marks_home') }}" class="{{ 'active' if request.endpoint in ['exams.marks_home','exams.marks_entry'] }}"><span class="ic">&#9998;</span> Enter marks</a>
+      <a href="{{ url_for('exams.marks_import') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('exams.marks_import') }}"><span class="ic">&#8681;</span> Upload marks</a>
+      {% if has_perm('marks.verify') %}
+      <a href="{{ url_for('exams.verify_home') }}" class="{{ 'active' if request.endpoint=='exams.verify_home' }}"><span class="ic">&#10003;</span> Verify marks</a>
+      {% endif %}
+
+      <div class="group-label">Results</div>
+      <a href="{{ url_for('results.class_results') }}" class="{{ 'active' if request.endpoint=='results.class_results' }}"><span class="ic">&#9733;</span> Class results</a>
+      <a href="{{ url_for('results.subject_results') }}" class="{{ 'active' if request.endpoint=='results.subject_results' }}"><span class="ic">&#9673;</span> Subject results</a>
+      <a href="{{ url_for('results.reports_home') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('results.report') }}"><span class="ic">&#9642;</span> Report cards</a>
+
+      {% if is_admin() or has_perm('backup.create') or has_perm('audit.view') %}
+      <div class="group-label">System</div>
+      {% if is_admin() %}
+      <a href="{{ url_for('system.school_settings') }}" class="{{ 'active' if request.endpoint=='system.school_settings' }}"><span class="ic">&#9881;</span> School settings</a>
+      <a href="{{ url_for('system.grading') }}" class="{{ 'active' if request.endpoint=='system.grading' }}"><span class="ic">&#9636;</span> Grading scale</a>
+      <a href="{{ url_for('auth.users') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('auth.user') }}"><span class="ic">&#128100;</span> Teachers &amp; Users</a>
+      <a href="{{ url_for('auth.roles') }}" class="{{ 'active' if request.endpoint=='auth.roles' }}"><span class="ic">&#128273;</span> Roles &amp; permissions</a>
+      {% endif %}
+      {% if has_perm('backup.create') %}
+      <a href="{{ url_for('system.backup_home') }}" class="{{ 'active' if request.endpoint=='system.backup_home' }}"><span class="ic">&#8635;</span> Backup &amp; restore</a>
+      {% endif %}
+      {% if has_perm('audit.view') %}
+      <a href="{{ url_for('system.audit_log') }}" class="{{ 'active' if request.endpoint=='system.audit_log' }}"><span class="ic">&#128220;</span> Activity log</a>
+      {% endif %}
+      {% endif %}
+    </nav>
+    <div class="side-foot">Local data only &middot; v{{ app_version }}</div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div></div>
+      <div class="flex items-center gap-12">
+        <span class="who">Signed in as <b>{{ user.full_name }}</b> &middot; {{ ROLES.get(user.role, user.role) }}</span>
+        <a href="{{ url_for('auth.password') }}" class="btn btn-sm btn-ghost">Change password</a>
+        <form method="post" action="{{ url_for('auth.logout') }}" style="margin:0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm">Log out</button>
+        </form>
+      </div>
+    </div>
+    <div class="content{% block wide %}{% endblock %}">
+      {% include "_flash.html" %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% else %}
+  {% include "_flash.html" %}
+  {% block guest_content %}{% endblock %}
+{% endif %}
+</body>
+</html>

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">System</div><h1>Activity log</h1><p class="lede">{{ total }} events recorded.</p></div></div>
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Detail</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr><td style="white-space:nowrap;">{{ r.ts }}</td><td>{{ r.username or '-' }}</td><td>{{ r.action }}</td><td class="small">{{ r.detail }}</td></tr>
+  {% else %}
+    <tr><td colspan="4" class="tbl-empty">No activity recorded yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if pages > 1 %}
+<div class="pager">
+  {% if page > 1 %}<a href="{{ url_for('system.audit_log', page=page-1) }}" class="btn btn-sm">Previous</a>{% endif %}
+  Page {{ page }} of {{ pages }}
+  {% if page < pages %}<a href="{{ url_for('system.audit_log', page=page+1) }}" class="btn btn-sm">Next</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

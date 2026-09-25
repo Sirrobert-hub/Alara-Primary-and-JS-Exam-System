@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow"><a href="{{ url_for('academic.students') }}">Students</a></div>
+  <h1>{{ st.full_name }}</h1><p class="lede">Adm: <b>{{ st.adm_no }}</b>{% if st.uli %} &middot; ULI: <b>{{ st.uli }}</b>{% endif %}{% if st.assessment_no %} &middot; Assessment No: <b>{{ st.assessment_no }}</b>{% endif %} &middot; {{ st.class_label or 'Not assigned to a class' }}</p></div>
+  {% if hist %}
+  <div class="btn-row">
+    <a href="{{ url_for('results.student_history', sid=st.id, fmt='xlsx') }}" class="btn">Download Excel</a>
+    <a href="{{ url_for('results.student_history', sid=st.id, fmt='pdf') }}" class="btn">Download PDF</a>
+    {% if can_print %}<a href="{{ url_for('results.report_card', eid=hist[-1].exam.id, sid=st.id) }}" class="btn btn-primary">Latest report card</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{% if hist %}
+<div class="card section">
+  <h3>Average % over time</h3>
+  {{ chart }}
+</div>
+
+<div class="tbl-wrap section">
+<table>
+  <thead><tr><th>Examination</th><th>Class</th><th class="num-col">Total</th><th class="num-col">Avg %</th><th>Grade</th><th class="num-col">Points</th><th class="num-col">Pos (stream)</th><th class="num-col">Pos (class)</th></tr></thead>
+  <tbody>
+  {% for h in hist %}
+    <tr>
+      <td><a href="{{ url_for('results.report_card', eid=h.exam.id, sid=st.id) }}">{{ h.exam.name }} {{ h.exam.term }} {{ h.exam.year or '' }}</a></td>
+      <td>{{ h.class_label }}</td>
+      <td class="num-col">{{ h.student.total|round(1) }}/{{ h.student.possible|round(1) }}</td>
+      <td class="num-col">{{ '%.1f'|format(h.student.avg_pct) }}</td>
+      <td>{{ h.student.grade }}</td>
+      <td class="num-col">{{ '%.1f'|format(h.student.mean_points) }}</td>
+      <td class="num-col">{{ h.student.pos_stream }}/{{ h.student.n_stream }}</td>
+      <td class="num-col">{{ h.student.pos_class }}/{{ h.student.n_class }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if subj %}
+<div class="tbl-wrap section">
+<table>
+  <thead><tr><th>Subject</th>{% for h in hist %}<th class="num-col">{{ h.exam.name[:14] }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for s in subj %}
+    <tr><td>{{ s.name }}</td>
+    {% for h in hist %}
+      {% set c = s.vals.get(h.exam.id) %}
+      <td class="num-col">{% if c %}{{ 'ABS' if c.absent else (c.pct|round(1) ~ '%') }}{% else %}-{% endif %}</td>
+    {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% else %}
+<div class="empty"><h3>No results yet</h3><p>This student has no recorded marks in any examination.</p></div>
+{% endif %}
+{% endblock %}

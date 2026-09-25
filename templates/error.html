@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="empty">
+  <h3>{{ code }}</h3>
+  <p>{{ message }}</p>
+  {% if user %}<a href="{{ url_for('system.dashboard') }}" class="btn btn-primary">Back to dashboard</a>{% endif %}
+</div>
+{% endblock %}
+{% block guest_content %}
+<div class="bare"><div class="auth-card">
+  <div class="mark">{{ code }}</div>
+  <p style="text-align:center;">{{ message }}</p>
+  <a href="{{ url_for('auth.login') }}" class="btn btn-primary" style="width:100%; justify-content:center;">Go to login</a>
+</div></div>
+{% endblock %}

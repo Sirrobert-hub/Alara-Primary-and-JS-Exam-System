@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow"><a href="{{ url_for('results.reports_home', exam_id=exam.id, class_id=cid) }}">Report cards</a></div>
+<h1>Remarks &middot; {{ label }}</h1><p class="lede">{{ exam.name }} {{ exam.term }} {{ exam.year or '' }}</p></div></div>
+
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="btn-row section">
+  <button class="btn" name="action" value="suggest_teacher">Fill empty class-teacher boxes with a suggested remark</button>
+  {% if principal_ok %}<button class="btn" name="action" value="suggest_principal">Fill empty principal boxes with a suggested remark</button>{% endif %}
+</div>
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>Student</th><th>Class teacher's remark</th>{% if principal_ok %}<th>Principal's remark</th>{% endif %}</tr></thead>
+  <tbody>
+  {% for s in students %}
+    {% set r = remarks.get(s.id, {'class_teacher':'','principal':''}) %}
+    <tr>
+      <td>{{ s.name }}<br><span class="small muted">{{ s.adm_no }} &middot; {{ '%.1f'|format(s.avg_pct) if s.n else '-' }}% ({{ s.grade }})</span></td>
+      <td><textarea name="ct_{{ s.id }}" rows="2">{{ r.class_teacher }}</textarea></td>
+      {% if principal_ok %}<td><textarea name="pr_{{ s.id }}" rows="2">{{ r.principal }}</textarea></td>{% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<div class="form-actions"><button class="btn btn-primary" name="action" value="save">Save remarks</button></div>
+</form>
+{% endblock %}

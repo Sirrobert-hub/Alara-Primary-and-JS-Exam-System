@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block wide %} wide{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow">Results</div><h1>Report cards</h1></div>
+  {% if res and rows %}
+  <div class="btn-row">
+    <a href="{{ url_for('results.report_remarks', exam_id=eid, class_id=cid) }}" class="btn">Class teacher &amp; principal remarks</a>
+    <a href="{{ url_for('results.report_print', exam_id=eid, class_id=cid) }}" class="btn" target="_blank">Print all</a>
+    <a href="{{ url_for('results.report_pdf', exam_id=eid, class_id=cid) }}" class="btn btn-primary">Download all as PDF</a>
+  </div>
+  {% endif %}
+</div>
+<form method="get" class="pill-filter">
+  <select name="exam_id" onchange="this.form.submit()">
+    {% for e in exams %}<option value="{{ e.id }}" {{ 'selected' if eid==e.id }}>{{ e.name }} {{ e.term }} {{ e.year or '' }}</option>{% endfor %}
+  </select>
+  <select name="class_id" onchange="this.form.submit()">
+    {% for c in classes %}<option value="{{ c.id }}" {{ 'selected' if cid==c.id }}>{{ c.label }}</option>{% endfor %}
+  </select>
+</form>
+
+{% if not classes %}
+<div class="empty"><h3>No classes available</h3><p>You can only print report cards for classes you are the class teacher of, unless you have the report-printing permission.</p></div>
+{% elif unverified %}
+<div class="flash flash-error">{{ unverified }} mark(s) in this class are not yet verified. Report cards will still include them.</div>
+{% endif %}
+
+{% if missing %}
+<div class="flash flash-error">{{ missing }} active student(s) in this class have no results yet and won't appear on report cards.</div>
+{% endif %}
+
+{% if rows %}
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th class="num-col">Pos</th><th>Adm No</th><th>Name</th><th class="num-col">Avg %</th><th>Grade</th><th></th></tr></thead>
+  <tbody>
+  {% for s in rows %}
+    <tr>
+      <td class="num-col">{{ s.pos_stream or '-' }}</td><td>{{ s.adm_no }}</td><td>{{ s.name }}</td>
+      <td class="num-col">{{ '%.1f'|format(s.avg_pct) if s.n else '-' }}</td><td>{{ s.grade }}</td>
+      <td class="btn-row">
+        <a href="{{ url_for('results.report_card', eid=eid, sid=s.id) }}" class="btn btn-sm" target="_blank">View</a>
+        <a href="{{ url_for('results.report_pdf', exam_id=eid, class_id=cid, student_id=s.id) }}" class="btn btn-sm">PDF</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% elif eid and cid %}
+<div class="empty"><h3>No results yet</h3><p>Enter and verify marks before generating report cards.</p></div>
+{% endif %}
+{% endblock %}

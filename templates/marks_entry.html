@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow"><a href="{{ url_for('exams.marks_home') }}">Enter marks</a></div>
+  <h1>{{ subject.name }} &middot; {{ cls.label }}</h1>
+  <p class="lede">{{ exam.name }} {{ exam.term }} {{ exam.year or '' }} &middot; out of {{ paper.out_of|int if paper.out_of == paper.out_of|int else paper.out_of }}{% if teacher %} &middot; {{ teacher }}{% endif %}</p></div>
+  <a href="{{ url_for('exams.marks_template', eid=exam.id, cid=cls.id) }}" class="btn">Download as Excel</a>
+</div>
+
+{% if all_locked %}
+<div class="flash flash-error">{% if exam.status != 'open' %}This examination is closed for entry.{% else %}All marks here are verified and locked.{% endif %}
+{% if override %} You can still change them below because you have permission to override.{% endif %}</div>
+{% endif %}
+
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th style="width:44px;">#</th><th>Adm No</th><th>Name</th><th class="center" style="width:110px;">Mark</th><th class="center" style="width:70px;">Absent</th><th></th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr class="mark-row {{ 'is-abs' if r.absent }}">
+      <td>{{ loop.index }}</td><td>{{ r.s.adm_no }}</td><td>{{ r.s.full_name }}</td>
+      <td class="center"><input class="mark-input" type="text" inputmode="decimal" name="s_{{ r.s.id }}" value="{{ r.value }}" {{ 'disabled' if r.locked }}></td>
+      <td class="center"><input type="checkbox" name="a_{{ r.s.id }}" {{ 'checked' if r.absent }} {{ 'disabled' if r.locked }}></td>
+      <td>{% if r.verified %}<span class="badge badge-green">Verified</span>{% elif r.locked %}<span class="badge badge-grey">Locked</span>{% endif %}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="tbl-empty">No active students in this class.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if rows %}
+<div class="form-actions">
+  <button class="btn btn-primary">Save marks</button>
+  <span class="small muted">Type ABS by ticking Absent for a student who missed the exam.</span>
+</div>
+{% endif %}
+</form>
+
+{% if has_perm('exams.manage') %}
+<div class="card section" style="margin-top: 2rem; border-top: 3px solid var(--crimson, #dc2626);">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+    <div>
+      <h3 style="margin:0 0 4px 0; color:var(--ink);">Delete / Clear Exam Entries</h3>
+      <p class="small muted" style="margin:0;">As an administrator, you can clear all recorded marks for this paper or delete this exam entry completely.</p>
+    </div>
+    <div class="flex gap-8 items-center">
+      <form method="post" action="{{ url_for('exams.exam_paper_clear', eid=exam.id, cid=cls.id, sid=subject.id) }}" onsubmit="return confirm('Are you sure you want to CLEAR ALL marks for {{ subject.name }} in {{ cls.label }}? All entered scores will be removed.');" style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-gold">Clear all marks</button>
+      </form>
+      <form method="post" action="{{ url_for('exams.exam_paper_delete', eid=exam.id, cid=cls.id, sid=subject.id) }}" onsubmit="return confirm('Are you sure you want to DELETE this entire exam paper entry ({{ subject.name }} - {{ cls.label }})? This removes it from the exam and deletes all marks.');" style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-danger">Delete exam entry</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
